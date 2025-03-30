@@ -2,10 +2,12 @@
 #include "Common.h"
 #include "SharedVector.h"
 #include "IniReader.h"
+#include "Logger.h"
 
 class DataProvider
 {
 protected:
+	//std::shared_ptr<Logger> psharedLogger;
 	std::atomic<int> m_Exit;
 	SharedVector<LineData>* pSharevec;
 
@@ -18,9 +20,10 @@ public:
 	};
 
 	std::atomic<int> m_bConnected;
-	DataProvider() : m_Exit(0), m_bConnected(0), pSharevec(nullptr){
+	DataProvider() : m_Exit(0), m_bConnected(0), 
+		pSharevec(nullptr)/*,  psharedLogger(nullptr)*/{
 
-	}
+	} 
 
 	void setQ(SharedVector<LineData>* ptVec) {
 		pSharevec = ptVec;
@@ -30,7 +33,14 @@ public:
 		m_Exit = val;
 	}
 
-	virtual void Init(IniReader* m_pReader, std::string strSectionName) = 0;
+	virtual void Init(IniReader* m_pReader, std::string strSectionName) = 0 {
+
+		int nEnable_Log = m_pReader->getint("General", "EnableLog", 1);
+
+		//if(nEnable_Log) 
+			//psharedLogger = Logger::getInstance();
+
+	};
 	virtual void start() = 0;
 
 	virtual ~DataProvider() {

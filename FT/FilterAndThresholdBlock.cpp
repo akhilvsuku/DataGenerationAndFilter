@@ -3,76 +3,14 @@
 
 #include <iostream>
 #include "FilterAndThreshold.h"
- 
+#include "Logger.h"
+
+Logger* Logger::m_pInstance = nullptr;
 
 int main()
 {
     FilterAndThreshold oFilterAndThreshold;
     oFilterAndThreshold.Init();
-    /*int nMode = 0;
-
-    std::cout << "\t1 Sender. \n \t2 Receiver\n";
-    std::cin >> nMode;
-
-    if (nMode == 2) {
-        SharedVector<LineData> oSharedVec;
-        TCPConMan server(TCPConMan::Mode::Receiver, PORT, "", &oSharedVec);
-        std::thread serverThread([&]() {
-            server.start();
-            });
-
-
-        std::thread ProcessThread([&]() {
-                while (!server.m_exit) {
-                    if (oSharedVec.size() > 0) {
-                        LineData oData = oSharedVec.pop_front();
-                        oData.print();
-                    }
-                    Sleep(100);
-                }
-            });
-
-
-        serverThread.join();
-        ProcessThread.join();
-
-        while (true) {
-            std::string str_data = "";
-            std::cout << "\tType Exit to exit:\n";
-            std::cin >> str_data;
-
-            if (str_data == "Exit" || str_data == "exit")
-                break;
-        }
-    }
-    else {
-
-        /* std::thread clientThread([]() {
-            TCPConMan sender(TCPConMan::Mode::Sender, "127.0.0.1", PORT);
-            std::string msg = "Hello from client!";
-            sender.sendMessage((uint8_t*)msg.c_str(), msg.length());
-            });
-
-        clientThread.join();* /
-
-
-        TCPConMan sender(TCPConMan::Mode::Sender, PORT, "127.0.0.1", 0);
-        while (true) {
-            std::string str_data = "";
-            std::cout << "\tEnter data (Type Exit to exit.):\n";
-            std::cin >> str_data;
-
-            if (str_data == "Exit" || str_data == "exit")
-                break;
-             
-            sender.sendMessage((uint8_t*)str_data.c_str(), str_data.length());
-        }
-
-
-    }
-
-
-    */
     return 0;
 }
 

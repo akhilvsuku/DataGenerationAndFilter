@@ -10,7 +10,8 @@ uint8_t RandomDataGen::RandomNumber()
 }
 
 void RandomDataGen::GenerateRandomNum(int nType)
-{ 
+{
+	Logger::getInstance()->log(Logger::Level::INFO, "Starting RandomDataGen::GenerateRandomNum Thread");
 	while (!m_Exit) {
 		// m_atnAlternator used to get alternate number from 
 		// different random value generator loops 
@@ -21,4 +22,5 @@ void RandomDataGen::GenerateRandomNum(int nType)
 		}
 		std::this_thread::sleep_for(std::chrono::nanoseconds(m_process_delay_in_ns));
 	}
+	Logger::getInstance()->log(Logger::Level::INFO, "Exiting GenerateRandomNum.");
 }

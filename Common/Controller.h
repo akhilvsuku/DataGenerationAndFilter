@@ -6,6 +6,7 @@ using namespace std::chrono_literals;
 
 class Controller
 {
+
 protected:
 	DataProvider* m_pServerSender; // Data sender 
 	DataProvider*m_pServerReceiver; // Data receiver
@@ -20,15 +21,16 @@ protected:
 public: 
 	//Default constructor
 	Controller() : m_pServerSender(0), m_pServerReceiver(0), m_process_delay_in_ns(100),
-		m_Enable_Log(1) {
+		m_Enable_Log(1)/*, psharedLogger(nullptr)*/{
 		m_pReader = new IniReader;
 	}
 
+	//void SetLogger(std::shared_ptr<Logger> pLogger) {
+	//	psharedLogger = pLogger;
+	//}
+
 	// For initialization
 	virtual void Init() = 0 {
-    
-
-		m_Enable_Log = m_pReader->getint("General", "EnableLog", 1); 
 
 		m_process_delay_in_ns = m_pReader->getint("General", "ProcessDelayInNS", 500);
 		if (m_process_delay_in_ns < 500)
@@ -39,33 +41,36 @@ public:
 				m_pServerReceiver->start();
 			});
 
+		Logger::getInstance()->log(Logger::Level::INFO, "Initialization completed");
+
 		ProcessData();
 	};
 
 	//Function for procesing the Q data
 	virtual void ProcessData()
 	{
+		Logger::getInstance()->log(Logger::Level::INFO, "Starting ProcessData Thread");
 
 		do{
 			LineData oData;
-			if (m_oSharedVec.size() > 0) {
-				// module is processing data from Q
-				if (m_Enable_Log)
-					std::cout << "Controller::ProcessData New Data in Q.\n";
+			int vecsz = m_oSharedVec.size();
+			if (vecsz  > 0) {
+				// module is processing data from Q 
+
+				Logger::getInstance()->log(Logger::Level::INFO, "Vector size : " + std::to_string(vecsz) + ".");
 
 				oData = std::move(m_oSharedVec.pop_front());
 				ProcessRequest(&oData);
 
 			}
 
-			if (oData.flag == 0x01 && m_SenderEnable)
+			if (oData.flag == 0x01 && m_SenderEnable) 
 				SendData(&oData);
 
 
 			std::this_thread::sleep_for(std::chrono::nanoseconds(m_process_delay_in_ns));
 		}while(!m_Exit);
-		if (m_Enable_Log)
-			std::cout << "Controller::ProcessData Exiting.\n";
+		Logger::getInstance()->log(Logger::Level::INFO, "Controller::ProcessData Exiting.");
 	}
 
 	//Function to inherit the derived class for module specific processing on data;
@@ -74,11 +79,11 @@ public:
 	//Sending data to next module 
 	virtual void SendData(LineData* pData)
 	{
-		std::cout << "Controller::SendData Data sending to next module.\n";
+		Logger::getInstance()->log(Logger::Level::INFO, "Controller::SendData Data sending to next module.");
 		if (m_pServerSender->m_bConnected)
-			m_pServerSender->sendMessage(pData->data, pData->sz);
+			m_pServerSender->sendMessage(pData->data.get(), pData->sz);
 		else
-			std::cout << "Controller::SendData Not connected to any socket.\n";
+			Logger::getInstance()->log(Logger::Level::WARNING, "Controller::SendData No Sender is connected. Yet tried to send data.");
 	}
 
 

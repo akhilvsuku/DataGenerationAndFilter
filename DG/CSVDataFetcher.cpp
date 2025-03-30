@@ -6,22 +6,23 @@
 
 void CSVDataFetcher::GenerateRandomNum()
 {
+    Logger::getInstance()->log(Logger::Level::INFO, "Starting CSVDataFetcher::GenerateRandomNum Thread");
     while (!m_Exit) {
         auto veccsvData = readCSV(m_strFileName);
 
         for (const auto& row : veccsvData) {
             LineData oData(row.length(), (uint8_t*)row.c_str());
 
-
             if (pSharevec)
                 pSharevec->push_back(std::move(oData));
             else
-                printf("CSVDataFetcher::GenerateRandomNum No shared Q is provided.\n");
+                Logger::getInstance()->log(Logger::Level::WARNING, "CSVDataFetcher::GenerateRandomNum No shared Q is provided.");
 
         }
          
         std::this_thread::sleep_for(std::chrono::nanoseconds(m_process_delay_in_ns));
     }
+    Logger::getInstance()->log(Logger::Level::INFO, "Exiting GenerateRandomNum");
 }
 
 std::vector<std::string> CSVDataFetcher::readCSV(const std::string& filename) {
@@ -30,7 +31,7 @@ std::vector<std::string> CSVDataFetcher::readCSV(const std::string& filename) {
     std::string line;
 
     if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
+        Logger::getInstance()->log(Logger::Level::ERRR, "Error opening file: " + filename + ".");
         return {};
     }
 

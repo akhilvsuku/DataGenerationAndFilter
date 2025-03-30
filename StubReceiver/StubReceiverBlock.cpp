@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include "StubReceiver.h"
- 
+
+#include "Logger.h"
+
+Logger* Logger::m_pInstance = nullptr;
 
 int main()
 {

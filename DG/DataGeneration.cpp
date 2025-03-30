@@ -6,6 +6,8 @@ void DataGeneration::Init() {
 
     m_pReader->load("config.ini");
 
+    Logger::getInstance(m_pReader)->log(Logger::Level::INFO, "Initialization starts");
+
     m_SenderEnable = m_pReader->getint("General", "TCPSenderEnabled", 1);
 
     if (m_SenderEnable) {
@@ -13,10 +15,13 @@ void DataGeneration::Init() {
         m_pServerSender = new TCPConMan;
         m_pServerSender->Init(m_pReader, "TCPSender"); 
     }
+    else  
+        Logger::getInstance()->log(Logger::Level::INFO, "Sender disabled");
 
     m_bTestMode = m_pReader->getint("General", "TestMode", 1);
 
     if (m_bTestMode) {
+        Logger::getInstance()->log(Logger::Level::INFO, "Running in Testmode");
 
         m_pServerReceiver = new CSVDataFetcher;
         m_pServerReceiver->Init(m_pReader, "CSVDataFetcher");
@@ -24,6 +29,7 @@ void DataGeneration::Init() {
 
     }
     else {
+        Logger::getInstance()->log(Logger::Level::INFO, "Running as Random Generate Loop mode");
 
         m_pServerReceiver = new RandomDataGen;
         m_pServerReceiver->Init(m_pReader, "RandomDataGen");
@@ -35,8 +41,6 @@ void DataGeneration::Init() {
 
 void DataGeneration::ProcessRequest(LineData* pData)
 {
-    if (m_Enable_Log)
-        std::cout << "Controller::ProcessData New Data in Q.\n"; 
 
     if (!m_bTestMode) {
 
@@ -47,5 +51,6 @@ void DataGeneration::ProcessRequest(LineData* pData)
         *pData = oLineData;
     }
     pData->flag = 0x01; 
+    pData->print();
 }
 

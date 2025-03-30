@@ -6,6 +6,7 @@
 void FilterAndThreshold::Init() {
 
 	m_pReader->load("config.ini");
+	Logger::getInstance(m_pReader)->log(Logger::Level::INFO, "Initialization starts");
 	m_dThreasholdVal = std::stod(m_pReader->getstring("General", "TV", "1"));
 
 	m_SenderEnable = m_pReader->getint("General", "TCPSenderEnabled", 1);
@@ -15,6 +16,8 @@ void FilterAndThreshold::Init() {
 		m_pServerSender = new TCPConMan;
 		m_pServerSender->Init(m_pReader, "TCPSender");
 	}
+	else
+		Logger::getInstance()->log(Logger::Level::INFO, "Sender disabled");
 
 	m_ReceiverEnable = m_pReader->getint("General", "TCPReceiverEnabled", 1);
 	if (m_ReceiverEnable) {
@@ -24,14 +27,18 @@ void FilterAndThreshold::Init() {
 		m_pServerReceiver->setQ(&m_oSharedVec);
 		// Starting to process the Q data
 	}
+	else
+		Logger::getInstance()->log(Logger::Level::INFO, "Receiver disabled");
 
 	Controller::Init();
 }
 
 void FilterAndThreshold::ProcessRequest(LineData* pData)
 {
-	if (pData->flag == 0xFE)
-		m_Exit = 1;
+	if (pData->flag == 0xFE) {
+		m_Exit = 1; 
+		Logger::getInstance()->log(Logger::Level::INFO, "Exit procedure starts.");
+	}
 	else {
 			
 		int ncount = 0;
@@ -49,14 +56,14 @@ void FilterAndThreshold::ProcessRequest(LineData* pData)
 				nsum += (m_vec_uData[i] * m_dFilter[i]);
 			}
 
-			if (m_Enable_Log)
-				std::cout << "FilterAndThreshold::ProcessRequest Key Sum :" << nsum <<"\n";
-
 			nout = (m_dThreasholdVal >= nsum) ? 1 : 0;
 
+			std::cout << "Key Sum : " << nsum << "Filtered : " << nout << "\n";
+			Logger::getInstance()->log(Logger::Level::EXTRAINFO,
+				"FilterAndThreshold::ProcessRequest Key Sum :" + std::to_string(nsum) + "Filtered :" + std::to_string(nout) + ".");
 
 			LineData oLineData(sizeof(nout), &nout);
-			*pData = oLineData;
+			*pData = std::move(oLineData);
 
 			if (m_SenderEnable)
 				SendData(pData);

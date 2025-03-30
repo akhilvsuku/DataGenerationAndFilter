@@ -30,20 +30,17 @@ public:
 
 	void start() {
 
+		Logger::getInstance()->log(Logger::Level::INFO, "Starting RandomNumGen Thread.");
 
 		while (!m_Exit && pSharevec != nullptr) {
-			// m_atnAlternator used to get alternate number from 
 			// different random value generator loops
-			/*if (pvecIn.size() > 1) {
-				uint8_t rnum[2] = { 0 };
-				rnum[0] = RandomNumber();
-				rnum[1] = pvecIn.pop_front();*/
 
 				uint8_t rnum = RandomNumber();
 
 				pSharevec->push_back(std::move(LineData(1, &rnum)));
 				std::this_thread::sleep_for(std::chrono::nanoseconds(m_process_delay_in_ns));
 		}
+		Logger::getInstance()->log(Logger::Level::INFO, "Exiting RandomNumGen.");
 	}; 
 
 

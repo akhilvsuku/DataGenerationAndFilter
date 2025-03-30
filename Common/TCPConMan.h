@@ -45,6 +45,7 @@ public:
 
 	void Init(IniReader* m_pReader, std::string strSectionName) {
 
+		Logger::getInstance()->log(Logger::Level::INFO, "TCPConMan Initialization started."); 
 		str_ip = m_pReader->getstring(strSectionName, "Host", "");
 		n_port = m_pReader->getint(strSectionName, "Port", 0);
 		n_mode = m_pReader->getint(strSectionName, "Mode", 0);
@@ -57,7 +58,7 @@ public:
 		Socket = socket(AF_INET, SOCK_STREAM, 0);
 		if (Socket == INVALID_SOCKET) {
 			int err = WSAGetLastError();
-			printf("TCPConMan::TCPConMan socket failed: %d\n", err);
+			Logger::getInstance()->log(Logger::Level::ERRR,"TCPConMan::TCPConMan socket failed:" + std::to_string(err) + ".");
 			WSACleanup();
 			return;
 		}
@@ -72,15 +73,17 @@ public:
 
 			if (bind(Socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
 				int err = WSAGetLastError();
-				printf("TCPConMan::TCPConMan bind failed: %d\n", err);
+				Logger::getInstance()->log(Logger::Level::ERRR, 
+					"TCPConMan::TCPConMan bind failed:" + std::to_string(err) + ".");
 				closesocket(Socket);
 				WSACleanup();
 				return;
 			}
 
 			if (listen(Socket, 1) == SOCKET_ERROR) {
-				int err = WSAGetLastError();
-				printf("TCPConMan::TCPConMan  listen failed: %d\n", err);
+				int err = WSAGetLastError(); 
+				Logger::getInstance()->log(Logger::Level::ERRR, 
+					"TCPConMan::TCPConMan listen failed:" + std::to_string(err) + ".");
 				closesocket(Socket);
 				WSACleanup();
 				return;
@@ -94,7 +97,8 @@ public:
 			if (connect(Socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
 
 				int err = WSAGetLastError();
-				printf("TCPConMan::TCPConMan connect failed: %d\n", err);
+				Logger::getInstance()->log(Logger::Level::ERRR, 
+					"TCPConMan::TCPConMan connect failed:" + std::to_string(err) + ".");
 				closesocket(Socket);
 				WSACleanup();
 				return;
@@ -111,7 +115,8 @@ public:
 				clientSocket = accept(Socket, (struct sockaddr*)&clientAddr, &clientAddrSize);
 				if (clientSocket == INVALID_SOCKET) {
 					int err = WSAGetLastError();
-					printf("TCPConMan::TCPConMan accept failed: %d\n", err);
+					Logger::getInstance()->log(Logger::Level::ERRR, 
+						"TCPConMan::TCPConMan accept failed:" + std::to_string(err) + ".");
 					m_bConnected = 0;
 					return;
 				}
@@ -121,8 +126,7 @@ public:
 		}
 
 		catch (const std::exception& e) {
-			std::cout << " a standard exception was caught, with message: '"
-				<< e.what() << "'\n";
+			Logger::getInstance()->log(Logger::Level::ERRR, "TCPConMan::TCPConMan Exception.");
 
 		}
 
@@ -133,7 +137,7 @@ public:
 		int recvbuflen = 512;
 		char recvbuf[512];
 		int iResult;
-		printf(" Connection received.\n");
+		Logger::getInstance()->log(Logger::Level::INFO, "TCPConMan::TCPConMan Connection received.");
 		m_bConnected = 2;
 
 		do {
@@ -145,20 +149,22 @@ public:
 					(recvbuf[2] == 'I' || recvbuf[2]) == 'i' &&
 					(recvbuf[0] == 'T' || recvbuf[0] == 't')) {
 					oData.flag = 0xFE;
+					Logger::getInstance()->log(Logger::Level::INFO, "TCPConMan::TCPConMan Setting exit flag.");
 				}
 
 				if(pSharevec)
 					pSharevec->push_back(std::move(oData));
 				else
-					printf("TCPConMan::TCPConMan No shared Q is provided.\n");
+					Logger::getInstance()->log(Logger::Level::WARNING, "TCPConMan::TCPConMan No shared Q is provided.");
+				
 			}
 			else if (iResult == 0) {
-				m_bConnected = 1;
-				printf("Connection closed\n");
+				m_bConnected = 1; 
+				Logger::getInstance()->log(Logger::Level::INFO, "TCPConMan::TCPConMan Connection closed.");
 			}
 			else {
 				int err = WSAGetLastError();
-				printf("TCPConMan::TCPConMan recv failed: %d\n", err);
+				Logger::getInstance()->log(Logger::Level::ERRR, "TCPConMan::TCPConMan recv failed:" + std::to_string(err) + ".");
 			}
 		} while (iResult > 0 && m_Exit != 1);
 	}
