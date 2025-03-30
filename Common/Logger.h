@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -69,7 +69,7 @@ public:
             ProcessQ();
             });
 
-        LoggerThread.detach();  // ? Now runs independently
+        LoggerThread.detach();  // ✅ Now runs independently
     }
 
     ~Logger() {
@@ -80,7 +80,6 @@ public:
 
     // Log message with level
     void log(Level level, const std::string& message) {
-        std::lock_guard<std::mutex> lock(logMutex);
         std::string logEntry = formatLogEntry(level, message);
 
         // Print to console
@@ -89,14 +88,10 @@ public:
 
         if(m_nLogLevel <= level)
             m_vecSharedLogQ.push_back(logEntry);
-        // Write to file
-       /* logFile << logEntry << std::endl;
-        logFile.flush();*/
     }
 
 
     void loginternal(const std::string& message) {
-        std::lock_guard<std::mutex> lock(logMutex);
 
         // Write to file
         logFile << message << std::endl;
@@ -115,7 +110,6 @@ private:
     bool m_nPrintToConsole;
     static Logger* m_pInstance;  // Smart pointer to manage instance
     std::ofstream logFile;
-    std::mutex logMutex; 
 
     // Private constructor for Singleton pattern
     explicit Logger() : m_nPrintToConsole(0), m_Exit(0) , m_nLogLevel(2){
