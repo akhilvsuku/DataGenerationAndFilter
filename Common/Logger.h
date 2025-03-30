@@ -6,24 +6,71 @@
 #include <chrono>
 #include <ctime>
 #include <memory>
-#include <IniReader.h>
+#include "IniReader.h"
+#include "SharedVector.h"
 
 class Logger {
+    SharedVector<std::string> m_vecSharedLogQ;
+    std::atomic<bool> m_Exit;
+    int m_process_delay_in_ns; // delay for processing in nano seconds
+    int m_nLogLevel; // delay for processing in nano seconds
+
+    void ProcessQ() {
+        do {
+            if (m_vecSharedLogQ.size() > 0) {
+                // module is processing log data from Q 
+
+                loginternal(m_vecSharedLogQ.pop_front());
+
+            }
+
+            std::this_thread::sleep_for(std::chrono::nanoseconds(m_process_delay_in_ns));
+        } while (!m_Exit);
+    }
 public:
-    enum Level {    INFO,
-                    WARNING, 
-                    ERRR,
+    enum Level {    ERRR,
+                    WARNING,
+                    INFO,
                     EXTRAINFO};
      
 
     // Get the Singleton instance
-    static Logger* getInstance(IniReader* pReader = 0) {
+    static Logger* getInstance() {
         if (m_pInstance == nullptr) 
-            m_pInstance = new Logger(pReader);
+            m_pInstance = new Logger();
 
         return m_pInstance;
     }
 
+    void InIt(IniReader* pReader) {
+
+
+        std::string filename = "";
+
+        filename = pReader->getstring("General", "LogFile", "logfile.log");
+
+        if (filename[filename.size() - 1] == '//')
+            filename += "logfile.log";
+
+
+        m_process_delay_in_ns = pReader->getint("General", "ProcessDelayInNS", 500);
+        if (m_process_delay_in_ns < 500)
+            m_process_delay_in_ns = 500; // minimum delay should be 500ns
+        
+        m_nLogLevel = pReader->getint("General", "LogLevel", 2);
+
+
+        logFile.open(filename, std::ios::app); // Append mode
+        if (!logFile) {
+            std::cerr << "Logger: Failed to open log file!" << std::endl;
+        }
+
+        std::thread LoggerThread([&]() {
+            ProcessQ();
+            });
+
+        LoggerThread.detach();  // ? Now runs independently
+    }
 
     ~Logger() {
         if (logFile.is_open()) {
@@ -40,8 +87,19 @@ public:
         if(m_nPrintToConsole)
             std::cout << logEntry << std::endl;
 
+        if(m_nLogLevel <= level)
+            m_vecSharedLogQ.push_back(logEntry);
         // Write to file
-        logFile << logEntry << std::endl;
+       /* logFile << logEntry << std::endl;
+        logFile.flush();*/
+    }
+
+
+    void loginternal(const std::string& message) {
+        std::lock_guard<std::mutex> lock(logMutex);
+
+        // Write to file
+        logFile << message << std::endl;
         logFile.flush();
     }
 
@@ -51,6 +109,7 @@ public:
     void error(const std::string& message)   { log(Level::ERRR, message); }
 
     void SetPrintToConsole(bool val) { m_nPrintToConsole = val; }
+    void SetExit(bool val) { m_Exit = val; }
 
 private:
     bool m_nPrintToConsole;
@@ -59,20 +118,7 @@ private:
     std::mutex logMutex; 
 
     // Private constructor for Singleton pattern
-    explicit Logger(IniReader* pReader) : m_nPrintToConsole(0){
-
-        std::string filename = "";
-        if (pReader) {
-            filename = pReader->getstring("General", "LogFile", "logfile.log");
-
-            if (filename[filename.size() - 1] == '//')
-                filename += "logfile.log";
-        }
-
-        logFile.open(filename, std::ios::app); // Append mode
-        if (!logFile) {
-            std::cerr << "Logger: Failed to open log file!" << std::endl;
-        }
+    explicit Logger() : m_nPrintToConsole(0), m_Exit(0) , m_nLogLevel(2){
     }
 
     // Prevent copying

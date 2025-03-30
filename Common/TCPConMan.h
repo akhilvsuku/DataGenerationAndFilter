@@ -106,12 +106,15 @@ public:
 
 		}
 		m_bConnected = 1;
+		Logger::getInstance()->log(Logger::Level::INFO,
+			"TCPConMan::TCPConMan connect completed.");
 	}
 
 	void start() {
 		try {
 			do {
-				printf(" Waiting for Sender connection\n");
+				Logger::getInstance()->log(Logger::Level::INFO,
+					"TCPConMan::TCPConMan Waiting for Sender connection."); 
 				clientSocket = accept(Socket, (struct sockaddr*)&clientAddr, &clientAddrSize);
 				if (clientSocket == INVALID_SOCKET) {
 					int err = WSAGetLastError();

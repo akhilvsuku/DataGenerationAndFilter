@@ -1,7 +1,5 @@
 #pragma once
-#include "Common.h"
-#include "SharedVector.h"
-#include "IniReader.h"
+#include "Common.h" 
 #include "Logger.h"
 
 class DataProvider

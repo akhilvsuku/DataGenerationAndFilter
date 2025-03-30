@@ -6,7 +6,9 @@
 void FilterAndThreshold::Init() {
 
 	m_pReader->load("config.ini");
-	Logger::getInstance(m_pReader)->log(Logger::Level::INFO, "Initialization starts");
+
+	Logger::getInstance()->InIt(m_pReader);
+	Logger::getInstance()->log(Logger::Level::INFO, "Initialization starts");
 	m_dThreasholdVal = std::stod(m_pReader->getstring("General", "TV", "1"));
 
 	m_SenderEnable = m_pReader->getint("General", "TCPSenderEnabled", 1);

@@ -7,7 +7,8 @@ void StubReceiver::Init() {
 
 	m_pReader->load("config.ini"); 
 
-	Logger::getInstance(m_pReader)->log(Logger::Level::INFO, "Initialization starts");
+	Logger::getInstance()->InIt(m_pReader);
+	Logger::getInstance()->log(Logger::Level::INFO, "Initialization starts");
 	m_ReceiverEnable = m_pReader->getint("General", "TCPReceiverEnabled", 1);
 
 	if (m_ReceiverEnable) {
